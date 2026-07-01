@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="author" content="Stylianos Serghiou" />
+
+<meta name="date" content="2026-06-25" />
+
+<title>Introduction to rtransparency</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Introduction to rtransparency</h1>
+<h4 class="author">Stylianos Serghiou</h4>
+<h4 class="date">2026-06-25</h4>
+
+
+
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(rtransparency)</span></code></pre></div>
+<div id="overview" class="section level1">
+<h1>Overview</h1>
+<p><code>rtransparency</code> identifies and extracts <strong>indicators
+of transparency</strong> from the full text of published biomedical
+articles. It works on two inputs: plain TXT files (typically converted
+from PDFs) and PMC XML files (the JATS XML served by PubMed Central).
+For each indicator it returns whether the indicator was found and, when
+found, the sentence or statement that triggered the detection.</p>
+<table style="width:100%;">
+<colgroup>
+<col width="21%" />
+<col width="21%" />
+<col width="28%" />
+<col width="28%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Indicator</th>
+<th>What it captures</th>
+<th align="center">TXT</th>
+<th align="center">PMC XML</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Conflicts of interest</td>
+<td>A COI / competing-interests disclosure</td>
+<td align="center"><code>rt_coi</code></td>
+<td align="center"><code>rt_coi_pmc</code></td>
+</tr>
+<tr class="even">
+<td>Funding</td>
+<td>A funding / financial-support statement</td>
+<td align="center"><code>rt_fund</code></td>
+<td align="center"><code>rt_fund_pmc</code></td>
+</tr>
+<tr class="odd">
+<td>Protocol registration</td>
+<td>Registration on a trial / review registry</td>
+<td align="center"><code>rt_register</code></td>
+<td align="center"><code>rt_register_pmc</code></td>
+</tr>
+<tr class="even">
+<td>Novelty</td>
+<td>Claims of novelty (“for the first time”)</td>
+<td align="center"><code>rt_novelty</code></td>
+<td align="center"><code>rt_novelty_pmc</code></td>
+</tr>
+<tr class="odd">
+<td>Replication</td>
+<td>Replication / independent-validation components</td>
+<td align="center"><code>rt_replication</code></td>
+<td align="center"><code>rt_replication_pmc</code></td>
+</tr>
+<tr class="even">
+<td>Data sharing</td>
+<td>Data deposited or made openly available</td>
+<td align="center"><code>rt_data_code</code></td>
+<td align="center"><code>rt_data_code_pmc</code></td>
+</tr>
+<tr class="odd">
+<td>Code sharing</td>
+<td>Source code / scripts made available</td>
+<td align="center"><code>rt_data_code</code></td>
+<td align="center"><code>rt_data_code_pmc</code></td>
+</tr>
+<tr class="even">
+<td>AI-use disclosure</td>
+<td>A statement that generative AI was (or was not) used to prepare the
+manuscript</td>
+<td align="center"><code>rt_ai</code></td>
+<td align="center"><code>rt_ai_pmc</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>rt_all_pmc</code> runs all eight detectors together in a single
+pass: COI, funding, registration, novelty, replication, data sharing,
+code sharing and AI-use disclosure. (<code>rt_all</code> covers the
+first five from TXT; data, code and AI also have standalone TXT
+detectors, <code>rt_data_code</code> and <code>rt_ai</code>, but are not
+part of the <code>rt_all</code> wrapper.)</p>
+<p>AI-use disclosure is the newest indicator. Journals have asked
+authors to disclose any use of generative AI (ChatGPT and similar) in
+preparing a manuscript only since 2023, so <code>rt_ai_pmc</code>
+evaluates the indicator only for articles published in 2023 or later and
+returns <code>NA</code> for earlier ones.</p>
+<p>The package and its validation are described in Serghiou et al.,
+<em>Assessment of transparency indicators across the biomedical
+literature: How open is open?</em> (PLOS Biology, 2021, <a href="doi:10.1371/journal.pbio.3001107" class="uri">doi:10.1371/journal.pbio.3001107</a>).</p>
+</div>
+<div id="how-detection-works" class="section level1">
+<h1>How detection works</h1>
+<div id="article-parsing" class="section level2">
+<h2>Article parsing</h2>
+<p>PMC XML is parsed with <code>xml2</code>. The XML root is
+standardized to the <code>&lt;article&gt;</code> node (the package
+accepts the OAI-PMH, EFetch <code>&lt;pmc-articleset&gt;</code> and bare
+<code>&lt;article&gt;</code> shapes), the namespace is optionally
+stripped (<code>remove_ns = TRUE</code>), and the text is split into the
+sections where each indicator usually appears: acknowledgments,
+footnotes / author notes, the body, the methods, the abstract and
+supplementary material. TXT files are read whole and split into
+paragraphs.</p>
+</div>
+<div id="rule-based-detection" class="section level2">
+<h2>Rule-based detection</h2>
+<p>Detection is <strong>rule-based and interpretable</strong>: each
+indicator is a curated set of regular expressions applied to the
+relevant sections, rather than a machine learning model. This keeps the
+output auditable (the matched statement is returned) and
+reproducible.</p>
+<ul>
+<li><strong>Conflicts of interest.</strong> Detected from structured COI
+footnotes (<code>fn-type = &quot;conflict&quot;</code>), from section titles
+(“Conflicts of interest”, “Competing interests”, “Declaration of
+interest”, “Duality of interest”), and from a set of text patterns
+covering financial relationships, consulting, fees, board membership,
+patents and explicit “no competing interests” declarations.
+Honoraria-to-subjects and reference text are masked to reduce false
+positives.</li>
+<li><strong>Funding.</strong> Detected from the XML
+<code>&lt;funding-group&gt;</code> element, from funding section titles,
+and from text patterns such as “supported by”, “funded by”, “grant from
+/ number”, named funders and award types. Acknowledged funding is
+required to use explicit funding language (a funding verb tied to a
+funder), so a bare mention of an institution or the word “support” is
+not enough. No-funding declarations are excluded.</li>
+<li><strong>Protocol registration.</strong> Detected from registry
+identifiers (ClinicalTrials.gov <code>NCT</code>, PROSPERO
+<code>CRD</code>, ISRCTN, ANZCTR <code>ACTRN</code>, DRKS, IRCT, UMIN,
+ChiCTR) and from registration phrasing in the methods or footnotes.</li>
+<li><strong>Novelty and replication.</strong> Detected from claim
+patterns such as “for the first time”, “to our knowledge”, “novel
+finding” (novelty) and “replicate”, “independently validated”,
+“confirmatory cohort” (replication), with negation filters (“failed to
+replicate”).</li>
+<li><strong>Data and code sharing.</strong> Detected by a native
+detector (<code>.detect_data_code</code>) built from public repository
+facts and curated benchmark statements: field-specific accession schemes
+(GEO <code>GSE</code>, SRA / BioProject <code>PRJNA</code>, PDB,
+ArrayExpress, dbGaP, ProteomeXchange, Dryad / Zenodo / figshare DOIs,
+…), repository URLs and names, deposit / availability /
+data-availability-statement language, and supplement and file-format
+signals. Crucially it distinguishes <strong>sharing</strong> (“data were
+deposited in GEO”) from <strong>reuse</strong> (“data were downloaded
+from GEO”) and excludes “available on request”. Code repositories
+(GitHub, GitLab, Bitbucket) only count as data when paired with a data
+noun, so a code-only GitHub link is not mistaken for data sharing.</li>
+<li><strong>AI-use disclosure.</strong> Detected from a “Declaration of
+generative AI” type section title, and from text that names a
+generative-AI tool (ChatGPT, GPT-4, Copilot, Gemini, an LLM, …) in a
+manuscript-preparation context (“used ChatGPT to improve the
+readability”) or in an explicit negation (“no generative AI was used”).
+A negative lookahead keeps the tool sense of “large language model” out
+of the writing-object pattern, and AI used purely as a research method
+(not for writing) is not counted. Only evaluated for 2023 onward.</li>
+</ul>
+</div>
+<div id="languages" class="section level2">
+<h2>Languages</h2>
+<p>Conflict-of-interest and funding statements are detected not only in
+English but also in <strong>Spanish, Portuguese, French, German and
+Italian</strong>, using language-distinctive patterns matched on
+transliterated (accent-stripped) text. The German conflict-of-interest
+detection rate, for example, rose from 33% to 97% once these were added.
+The other indicators are English-only for now.</p>
+</div>
+</div>
+<div id="usage-pmc-xml" class="section level1">
+<h1>Usage: PMC XML</h1>
+<p>The package ships an example PMC XML file. We use it below; replace
+the path with your own file to analyze a different article.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>xml_path <span class="ot">&lt;-</span> <span class="fu">system.file</span>(</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>  <span class="st">&quot;extdata&quot;</span>, <span class="st">&quot;PMID32171256-PMC7071725.xml&quot;</span>, <span class="at">package =</span> <span class="st">&quot;rtransparency&quot;</span></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>)</span></code></pre></div>
+<div id="all-indicators-at-once" class="section level2">
+<h2>All indicators at once</h2>
+<p><code>rt_all_pmc</code> returns all eight indicators in one call,
+together with the matched statement text, the publication
+<code>year</code> and article metadata.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>all_indicators <span class="ot">&lt;-</span> <span class="fu">rt_all_pmc</span>(xml_path, <span class="at">remove_ns =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>dplyr<span class="sc">::</span><span class="fu">glimpse</span>(</span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>  all_indicators[, <span class="fu">c</span>(<span class="st">&quot;pmid&quot;</span>, <span class="st">&quot;year&quot;</span>, <span class="st">&quot;is_coi_pred&quot;</span>, <span class="st">&quot;is_fund_pred&quot;</span>,</span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>                     <span class="st">&quot;is_register_pred&quot;</span>, <span class="st">&quot;is_novelty_pred&quot;</span>, <span class="st">&quot;is_replication_pred&quot;</span>,</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>                     <span class="st">&quot;is_open_data&quot;</span>, <span class="st">&quot;is_open_code&quot;</span>, <span class="st">&quot;is_ai_pred&quot;</span>)]</span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>)</span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a><span class="co">#&gt; Rows: 1</span></span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a><span class="co">#&gt; Columns: 10</span></span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a><span class="co">#&gt; $ pmid                &lt;chr&gt; &quot;32171256&quot;</span></span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a><span class="co">#&gt; $ year                &lt;int&gt; 2020</span></span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a><span class="co">#&gt; $ is_coi_pred         &lt;lgl&gt; TRUE</span></span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a><span class="co">#&gt; $ is_fund_pred        &lt;lgl&gt; FALSE</span></span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a><span class="co">#&gt; $ is_register_pred    &lt;lgl&gt; FALSE</span></span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a><span class="co">#&gt; $ is_novelty_pred     &lt;lgl&gt; FALSE</span></span>
+<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a><span class="co">#&gt; $ is_replication_pred &lt;lgl&gt; FALSE</span></span>
+<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a><span class="co">#&gt; $ is_open_data        &lt;lgl&gt; TRUE</span></span>
+<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a><span class="co">#&gt; $ is_open_code        &lt;lgl&gt; FALSE</span></span>
+<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a><span class="co">#&gt; $ is_ai_pred          &lt;lgl&gt; NA</span></span></code></pre></div>
+<p><code>is_ai_pred</code> is <code>NA</code> here because this example
+article predates 2023; for a 2023 or later article it would be
+<code>TRUE</code> or <code>FALSE</code>.</p>
+</div>
+<div id="individual-indicators" class="section level2">
+<h2>Individual indicators</h2>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>coi <span class="ot">&lt;-</span> <span class="fu">rt_coi_pmc</span>(xml_path, <span class="at">remove_ns =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="fu">c</span>(<span class="at">is_coi =</span> coi<span class="sc">$</span>is_coi_pred, <span class="at">text =</span> <span class="fu">substr</span>(coi<span class="sc">$</span>coi_text, <span class="dv">1</span>, <span class="dv">120</span>))</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a><span class="co">#&gt;                                                                                                                     is_coi </span></span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="co">#&gt;                                                                                                                     &quot;TRUE&quot; </span></span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a><span class="co">#&gt;                                                                                                                       text </span></span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a><span class="co">#&gt; &quot;Competing interests In the past 36 months, J.D.W. received research support through the Collaboration for Research Integ&quot;</span></span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>fund <span class="ot">&lt;-</span> <span class="fu">rt_fund_pmc</span>(xml_path, <span class="at">remove_ns =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="fu">c</span>(<span class="at">is_fund =</span> fund<span class="sc">$</span>is_fund_pred, <span class="at">text =</span> <span class="fu">substr</span>(fund<span class="sc">$</span>fund_text, <span class="dv">1</span>, <span class="dv">120</span>))</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="co">#&gt; is_fund    text </span></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co">#&gt; &quot;FALSE&quot;      &quot;&quot;</span></span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>register <span class="ot">&lt;-</span> <span class="fu">rt_register_pmc</span>(xml_path, <span class="at">remove_ns =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>register<span class="sc">$</span>is_register_pred</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a><span class="co">#&gt; [1] FALSE</span></span></code></pre></div>
+</div>
+<div id="data-and-code-sharing" class="section level2">
+<h2>Data and code sharing</h2>
+<p><code>rt_all_pmc</code> already reports <code>is_open_data</code> and
+<code>is_open_code</code>; <code>rt_data_code_pmc</code> is the focused
+view that also returns the matched statements. Detection is native and
+needs no external packages.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>data_code <span class="ot">&lt;-</span> <span class="fu">rt_data_code_pmc</span>(xml_path, <span class="at">remove_ns =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>dplyr<span class="sc">::</span><span class="fu">glimpse</span>(</span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>  data_code[, <span class="fu">c</span>(<span class="st">&quot;is_open_data&quot;</span>, <span class="st">&quot;open_data_statements&quot;</span>,</span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>                <span class="st">&quot;is_open_code&quot;</span>, <span class="st">&quot;open_code_statements&quot;</span>)]</span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>)</span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a><span class="co">#&gt; Rows: 1</span></span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a><span class="co">#&gt; Columns: 4</span></span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a><span class="co">#&gt; $ is_open_data         &lt;lgl&gt; TRUE</span></span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a><span class="co">#&gt; $ open_data_statements &lt;chr&gt; &quot;Availability of data and materialsData will be s…</span></span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a><span class="co">#&gt; $ is_open_code         &lt;lgl&gt; FALSE</span></span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a><span class="co">#&gt; $ open_code_statements &lt;chr&gt; &quot;&quot;</span></span></code></pre></div>
+<p><code>rt_all_pmc</code> and <code>rt_data_code_pmc</code> also return
+<code>open_data_links</code> and <code>open_code_links</code>: the
+repository and accession URLs extracted from the statements, ready to
+pass to FAIR-assessment tooling such as <a href="https://github.com/choxos/rfair"><code>rfair</code></a>. Article
+metadata (title, journal, identifiers, dates) is available separately
+via <code>rt_meta_pmc</code>.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>meta <span class="ot">&lt;-</span> <span class="fu">rt_meta_pmc</span>(xml_path, <span class="at">remove_ns =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>dplyr<span class="sc">::</span><span class="fu">glimpse</span>(meta[, <span class="fu">c</span>(<span class="st">&quot;pmid&quot;</span>, <span class="st">&quot;doi&quot;</span>)])</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a><span class="co">#&gt; Rows: 1</span></span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a><span class="co">#&gt; Columns: 2</span></span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a><span class="co">#&gt; $ pmid &lt;chr&gt; &quot;32171256&quot;</span></span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a><span class="co">#&gt; $ doi  &lt;chr&gt; &quot;10.1186/s12874-020-0914-6&quot;</span></span></code></pre></div>
+</div>
+<div id="ai-use-disclosure" class="section level2">
+<h2>AI-use disclosure</h2>
+<p><code>rt_ai_pmc</code> reports the publication <code>year</code>, the
+year-gated prediction <code>is_ai_pred</code> (<code>NA</code> before
+2023) and the matched text. The <code>ai-disclosure</code> vignette
+covers this indicator in depth.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>ai <span class="ot">&lt;-</span> <span class="fu">rt_ai_pmc</span>(xml_path, <span class="at">remove_ns =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a><span class="fu">c</span>(<span class="at">year =</span> ai<span class="sc">$</span>year, <span class="at">is_ai =</span> ai<span class="sc">$</span>is_ai_pred)</span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a><span class="co">#&gt;  year is_ai </span></span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a><span class="co">#&gt;  2020    NA</span></span></code></pre></div>
+</div>
+</div>
+<div id="usage-txt-files" class="section level1">
+<h1>Usage: TXT files</h1>
+<p>To analyze a PDF, first convert it to TXT with
+<code>rt_read_pdf</code> (this needs the poppler <code>pdftotext</code>
+utility installed), then run the TXT detectors. The chunks below are
+illustrative and are not executed when the vignette is built.</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a>pdf_path <span class="ot">&lt;-</span> <span class="fu">system.file</span>(</span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>  <span class="st">&quot;extdata&quot;</span>, <span class="st">&quot;PMID32171256-PMC7071725.pdf&quot;</span>, <span class="at">package =</span> <span class="st">&quot;rtransparency&quot;</span></span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a>)</span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a>article <span class="ot">&lt;-</span> <span class="fu">rt_read_pdf</span>(pdf_path)</span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a><span class="fu">writeLines</span>(article, <span class="st">&quot;article.txt&quot;</span>)</span>
+<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a></span>
+<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a><span class="fu">rt_coi</span>(<span class="st">&quot;article.txt&quot;</span>)</span>
+<span id="cb10-8"><a href="#cb10-8" tabindex="-1"></a><span class="fu">rt_fund</span>(<span class="st">&quot;article.txt&quot;</span>)</span>
+<span id="cb10-9"><a href="#cb10-9" tabindex="-1"></a><span class="fu">rt_register</span>(<span class="st">&quot;article.txt&quot;</span>)</span>
+<span id="cb10-10"><a href="#cb10-10" tabindex="-1"></a><span class="fu">rt_data_code</span>(<span class="st">&quot;article.txt&quot;</span>)</span>
+<span id="cb10-11"><a href="#cb10-11" tabindex="-1"></a><span class="fu">rt_ai</span>(<span class="st">&quot;article.txt&quot;</span>)    <span class="co"># generative-AI-use disclosure</span></span>
+<span id="cb10-12"><a href="#cb10-12" tabindex="-1"></a><span class="fu">rt_all</span>(<span class="st">&quot;article.txt&quot;</span>)   <span class="co"># COI, funding, registration, novelty, replication</span></span></code></pre></div>
+<p><code>rt_ai</code> is the plain-text counterpart of
+<code>rt_ai_pmc</code>. A text file carries no reliable publication
+date, so <code>rt_ai</code> applies no 2023 year gate
+(<code>is_ai_pred</code> is always <code>TRUE</code> or
+<code>FALSE</code>, never <code>NA</code>) and cannot confine the scan
+to back-matter sections the way the XML detector does. Restrict it to
+articles published in 2023 or later, and expect a slightly higher
+false-positive rate on papers that use AI as a research method.</p>
+</div>
+<div id="processing-many-articles" class="section level1">
+<h1>Processing many articles</h1>
+<p><code>rt_all_pmc_dir()</code> runs all eight indicators over an
+entire directory (or a vector of file paths) in one call, designed for
+corpus-scale analysis.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="co"># Sequential, in memory</span></span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a>res <span class="ot">&lt;-</span> <span class="fu">rt_all_pmc_dir</span>(<span class="st">&quot;path/to/xml&quot;</span>, <span class="at">remove_ns =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a><span class="co"># Resumable and parallel: results are written to a CSV in chunks, a re-run skips</span></span>
+<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a><span class="co"># files already recorded, and a malformed file yields an is_success = FALSE row</span></span>
+<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a><span class="co"># instead of aborting the run.</span></span>
+<span id="cb11-7"><a href="#cb11-7" tabindex="-1"></a>future<span class="sc">::</span><span class="fu">plan</span>(<span class="st">&quot;multisession&quot;</span>)</span>
+<span id="cb11-8"><a href="#cb11-8" tabindex="-1"></a>res <span class="ot">&lt;-</span> <span class="fu">rt_all_pmc_dir</span>(</span>
+<span id="cb11-9"><a href="#cb11-9" tabindex="-1"></a>  <span class="st">&quot;path/to/xml&quot;</span>, <span class="at">remove_ns =</span> <span class="cn">TRUE</span>, <span class="at">output =</span> <span class="st">&quot;results.csv&quot;</span>, <span class="at">parallel =</span> <span class="cn">TRUE</span></span>
+<span id="cb11-10"><a href="#cb11-10" tabindex="-1"></a>)</span></code></pre></div>
+</div>
+<div id="summarizing-a-corpus" class="section level1">
+<h1>Summarizing a corpus</h1>
+<p>With one row per article, <code>rt_summary()</code> reports
+per-indicator prevalence with a Wilson confidence interval and a
+sensitivity/specificity-corrected (Rogan-Gladen) prevalence;
+<code>rt_score()</code> adds a per-article count of openness practices;
+and <code>rt_plot()</code> draws prevalence bars and yearly trends. The
+<code>transparency-summary</code> vignette covers this in depth.</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a><span class="fu">data</span>(rt_demo)            <span class="co"># a small simulated example shipped with the package</span></span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a><span class="fu">rt_summary</span>(rt_demo)[, <span class="fu">c</span>(<span class="st">&quot;indicator&quot;</span>, <span class="st">&quot;percent&quot;</span>, <span class="st">&quot;adj_percent&quot;</span>)]</span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a><span class="co">#&gt; # A tibble: 8 × 3</span></span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a><span class="co">#&gt;   indicator           percent adj_percent</span></span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                 &lt;dbl&gt;       &lt;dbl&gt;</span></span>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a><span class="co">#&gt; 1 is_coi_pred           70.4        70.8 </span></span>
+<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a><span class="co">#&gt; 2 is_fund_pred          79.6        79.4 </span></span>
+<span id="cb12-8"><a href="#cb12-8" tabindex="-1"></a><span class="co">#&gt; 3 is_register_pred      29.7        30.8 </span></span>
+<span id="cb12-9"><a href="#cb12-9" tabindex="-1"></a><span class="co">#&gt; 4 is_open_data          20.4        25.7 </span></span>
+<span id="cb12-10"><a href="#cb12-10" tabindex="-1"></a><span class="co">#&gt; 5 is_open_code           8.5         9.13</span></span>
+<span id="cb12-11"><a href="#cb12-11" tabindex="-1"></a><span class="co">#&gt; 6 is_novelty_pred       54.4        62.8 </span></span>
+<span id="cb12-12"><a href="#cb12-12" tabindex="-1"></a><span class="co">#&gt; 7 is_replication_pred    9.42        8.67</span></span>
+<span id="cb12-13"><a href="#cb12-13" tabindex="-1"></a><span class="co">#&gt; 8 is_ai_pred            25.2        NA</span></span></code></pre></div>
+</div>
+<div id="downloading-pmc-xml" class="section level1">
+<h1>Downloading PMC XML</h1>
+<p>PMC full-text XML can be downloaded by PMCID. The package exposes
+nothing for this, but the <code>europepmc</code> (CRAN) or
+<code>metareadr</code> packages work well; the following is
+illustrative.</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="co"># europepmc::epmc_ftxt(&quot;PMC7071725&quot;)            # returns the XML document</span></span>
+<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a><span class="co"># metareadr::mt_read_pmcoa(&quot;7071725&quot;, &quot;article.xml&quot;)</span></span></code></pre></div>
+</div>
+<div id="validation" class="section level1">
+<h1>Validation</h1>
+<p>The detectors were benchmarked against the human-labeled XML
+benchmark of Serghiou et al. (2021). The current package reaches
+roughly: COI 97% accuracy, funding 97%, protocol registration 98%. The
+native data/code detector reaches code 88% sensitivity / 99% specificity
+and data 77% sensitivity / 99% specificity (see
+<code>inst/benchmark/</code> and <code>data-raw/benchmark/</code> in the
+source repository for the reproducible benchmark). The native data/code
+values are reproducible benchmark and regression estimates, not
+untouched external-validation estimates.</p>
+</div>
+<div id="naming-convention-and-dependencies" class="section level1">
+<h1>Naming convention and dependencies</h1>
+<p>Functions that operate on TXT files do not end in <code>_pmc</code>;
+functions that operate on PMC XML end in <code>_pmc</code>. Data and
+code detection is implemented natively and no longer requires the
+<code>oddpub</code> or <code>tokenizers</code> packages.</p>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
