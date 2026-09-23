@@ -4,12 +4,14 @@
 \alias{rt_all_pmc}
 \title{Identify and extract all transparency indicators from a PMC XML.}
 \usage{
-rt_all_pmc(filename, remove_ns = FALSE, all_meta = FALSE)
+rt_all_pmc(filename, remove_ns = TRUE, all_meta = FALSE)
 }
 \arguments{
 \item{filename}{The name of the PMC XML as a string.}
 
-\item{remove_ns}{TRUE if an XML namespace exists, else FALSE (default).}
+\item{remove_ns}{Ignored since version 1.2.0 and kept for backward
+compatibility. Default XML namespaces are now always removed, so a
+namespaced PMC XML file gives the same result as a plain one.}
 
 \item{all_meta}{TRUE extracts all meta-data, FALSE extracts some (default).}
 }
@@ -17,8 +19,10 @@ rt_all_pmc(filename, remove_ns = FALSE, all_meta = FALSE)
 A dataframe of results. It returns the unique identifiers of the
     article, whether each indicator of transparency was identified
     (`is_coi_pred`, `is_fund_pred`, `is_register_pred`, `is_novelty_pred`,
-    `is_replication_pred`, `is_open_data`, `is_open_code` and the year-gated
-    `is_ai_pred`), the relevant text identified, whether it was identified
+    `is_replication_pred`, `is_open_data`, `is_open_code`, the year-gated
+    `is_ai_pred`, `is_open_access` with the `oa_license`, and
+    `is_reporting_pred` with the named `reporting_guideline`), the relevant
+    text identified, whether it was identified
     through a dedicated XML tag (such variables include "pmc" in their name,
     e.g. “fund_pmc_source”) and whether each labelling function identified
     relevant text or not. The labeling functions are returned to add
@@ -29,12 +33,14 @@ A dataframe of results. It returns the unique identifiers of the
 }
 \description{
 Takes a PMC XML and returns relevant meta-data, as well as whether the article
-    carries each of the eight transparency indicators: Conflicts of Interest
+    carries each of the ten transparency indicators: Conflicts of Interest
     (COI), Funding, Protocol Registration, Novelty, Replication, Data sharing,
-    Code sharing and disclosure of generative-AI use. Where a statement is
-    found, the relevant text is also extracted. This is the single-call entry
-    point; it covers the same data and code detection as
-    [rt_data_code_pmc()] and the same AI detection as [rt_ai_pmc()].
+    Code sharing, disclosure of generative-AI use, Open-access licensing and
+    Reporting-guideline use. Where a statement is found, the relevant text is
+    also extracted. This is the single-call entry point; it covers the same
+    data and code detection as [rt_data_code_pmc()], the same AI detection as
+    [rt_ai_pmc()], the same licensing detection as [rt_oa_pmc()] and the same
+    reporting-guideline detection as [rt_reporting_pmc()].
 }
 \examples{
 \donttest{
@@ -44,6 +50,6 @@ filepath <- system.file(
 )
 
 # Identify and extract meta-data and indicators of transparency.
-results_table <- rt_all_pmc(filepath, remove_ns = TRUE, all_meta = TRUE)
+results_table <- rt_all_pmc(filepath, all_meta = TRUE)
 }
 }

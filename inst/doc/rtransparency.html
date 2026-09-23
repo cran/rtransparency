@@ -12,7 +12,7 @@
 
 <meta name="author" content="Stylianos Serghiou" />
 
-<meta name="date" content="2026-06-25" />
+<meta name="date" content="2026-09-23" />
 
 <title>Introduction to rtransparency</title>
 
@@ -341,7 +341,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 <h1 class="title toc-ignore">Introduction to rtransparency</h1>
 <h4 class="author">Stylianos Serghiou</h4>
-<h4 class="date">2026-06-25</h4>
+<h4 class="date">2026-09-23</h4>
 
 
 
@@ -419,14 +419,28 @@ manuscript</td>
 <td align="center"><code>rt_ai</code></td>
 <td align="center"><code>rt_ai_pmc</code></td>
 </tr>
+<tr class="odd">
+<td>Open-access license</td>
+<td>Whether the article is openly licensed, and which license</td>
+<td align="center"><code>rt_oa</code></td>
+<td align="center"><code>rt_oa_pmc</code></td>
+</tr>
+<tr class="even">
+<td>Reporting guideline</td>
+<td>Whether a reporting guideline was followed, and which one</td>
+<td align="center"><code>rt_reporting</code></td>
+<td align="center"><code>rt_reporting_pmc</code></td>
+</tr>
 </tbody>
 </table>
-<p><code>rt_all_pmc</code> runs all eight detectors together in a single
+<p><code>rt_all_pmc</code> runs all ten detectors together in a single
 pass: COI, funding, registration, novelty, replication, data sharing,
-code sharing and AI-use disclosure. (<code>rt_all</code> covers the
-first five from TXT; data, code and AI also have standalone TXT
-detectors, <code>rt_data_code</code> and <code>rt_ai</code>, but are not
-part of the <code>rt_all</code> wrapper.)</p>
+code sharing, AI-use disclosure, open-access licensing and
+reporting-guideline use. (<code>rt_all</code> covers the first five from
+TXT; the others also have standalone TXT detectors, such as
+<code>rt_data_code</code>, <code>rt_ai</code>, <code>rt_oa</code> and
+<code>rt_reporting</code>, but are not part of the <code>rt_all</code>
+wrapper.)</p>
 <p>AI-use disclosure is the newest indicator. Journals have asked
 authors to disclose any use of generative AI (ChatGPT and similar) in
 preparing a manuscript only since 2023, so <code>rt_ai_pmc</code>
@@ -442,13 +456,12 @@ literature: How open is open?</em> (PLOS Biology, 2021, <a href="doi:10.1371/jou
 <h2>Article parsing</h2>
 <p>PMC XML is parsed with <code>xml2</code>. The XML root is
 standardized to the <code>&lt;article&gt;</code> node (the package
-accepts the OAI-PMH, EFetch <code>&lt;pmc-articleset&gt;</code> and bare
-<code>&lt;article&gt;</code> shapes), the namespace is optionally
-stripped (<code>remove_ns = TRUE</code>), and the text is split into the
-sections where each indicator usually appears: acknowledgments,
-footnotes / author notes, the body, the methods, the abstract and
-supplementary material. TXT files are read whole and split into
-paragraphs.</p>
+accepts the OAI-PMH, EFetch <code>&lt;pmc-articleset&gt;</code>, Europe
+PMC and bare <code>&lt;article&gt;</code> shapes), default namespaces
+are always stripped, and the text is split into the sections where each
+indicator usually appears: acknowledgments, footnotes / author notes,
+the body, the methods, the abstract and supplementary material. TXT
+files are read whole and split into paragraphs.</p>
 </div>
 <div id="rule-based-detection" class="section level2">
 <h2>Rule-based detection</h2>
@@ -502,6 +515,24 @@ readability”) or in an explicit negation (“no generative AI was used”).
 A negative lookahead keeps the tool sense of “large language model” out
 of the writing-object pattern, and AI used purely as a research method
 (not for writing) is not counted. Only evaluated for 2023 onward.</li>
+<li><strong>Open-access licensing.</strong> Read from the JATS
+<code>&lt;license&gt;</code> element and its license-reference URL, and
+classified to a canonical identifier (<code>CC-BY-4.0</code>,
+<code>CC-BY-NC-ND-4.0</code>, <code>CC0-1.0</code>, …). A Creative
+Commons or CC0 license (or an explicit open-access declaration) sets
+<code>is_open_access</code>; a CC0 data-waiver is not mistaken for the
+article license. This is the reuse (“R”) dimension of FAIR and feeds the
+<a href="https://github.com/choxos/rfair"><code>rfair</code></a>
+assessment.</li>
+<li><strong>Reporting-guideline use.</strong> Detected when authors
+state they followed a reporting guideline (the EQUATOR checklists:
+CONSORT, PRISMA and its extensions, STROBE, ARRIVE, STARD, TRIPOD,
+COREQ, SQUIRE, CHEERS, CARE, and the wider reportilo list), returning
+which one. Detection is precision-first: a guideline counts only in a
+reporting context; common-word acronyms (ARRIVE, CARE, RECORD, …)
+require the upper-case form beside a guideline noun; and animal-welfare
+(“Care and Use of Laboratory Animals”), clinical-practice and
+non-adherence mentions are excluded.</li>
 </ul>
 </div>
 <div id="languages" class="section level2">
@@ -523,45 +554,48 @@ the path with your own file to analyze a different article.</p>
 <span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>)</span></code></pre></div>
 <div id="all-indicators-at-once" class="section level2">
 <h2>All indicators at once</h2>
-<p><code>rt_all_pmc</code> returns all eight indicators in one call,
+<p><code>rt_all_pmc</code> returns all ten indicators in one call,
 together with the matched statement text, the publication
 <code>year</code> and article metadata.</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>all_indicators <span class="ot">&lt;-</span> <span class="fu">rt_all_pmc</span>(xml_path, <span class="at">remove_ns =</span> <span class="cn">TRUE</span>)</span>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>all_indicators <span class="ot">&lt;-</span> <span class="fu">rt_all_pmc</span>(xml_path)</span>
 <span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a></span>
 <span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>dplyr<span class="sc">::</span><span class="fu">glimpse</span>(</span>
 <span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>  all_indicators[, <span class="fu">c</span>(<span class="st">&quot;pmid&quot;</span>, <span class="st">&quot;year&quot;</span>, <span class="st">&quot;is_coi_pred&quot;</span>, <span class="st">&quot;is_fund_pred&quot;</span>,</span>
 <span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>                     <span class="st">&quot;is_register_pred&quot;</span>, <span class="st">&quot;is_novelty_pred&quot;</span>, <span class="st">&quot;is_replication_pred&quot;</span>,</span>
-<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>                     <span class="st">&quot;is_open_data&quot;</span>, <span class="st">&quot;is_open_code&quot;</span>, <span class="st">&quot;is_ai_pred&quot;</span>)]</span>
-<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>)</span>
-<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a><span class="co">#&gt; Rows: 1</span></span>
-<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a><span class="co">#&gt; Columns: 10</span></span>
-<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a><span class="co">#&gt; $ pmid                &lt;chr&gt; &quot;32171256&quot;</span></span>
-<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a><span class="co">#&gt; $ year                &lt;int&gt; 2020</span></span>
-<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a><span class="co">#&gt; $ is_coi_pred         &lt;lgl&gt; TRUE</span></span>
-<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a><span class="co">#&gt; $ is_fund_pred        &lt;lgl&gt; FALSE</span></span>
-<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a><span class="co">#&gt; $ is_register_pred    &lt;lgl&gt; FALSE</span></span>
-<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a><span class="co">#&gt; $ is_novelty_pred     &lt;lgl&gt; FALSE</span></span>
-<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a><span class="co">#&gt; $ is_replication_pred &lt;lgl&gt; FALSE</span></span>
-<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a><span class="co">#&gt; $ is_open_data        &lt;lgl&gt; TRUE</span></span>
-<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a><span class="co">#&gt; $ is_open_code        &lt;lgl&gt; FALSE</span></span>
-<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a><span class="co">#&gt; $ is_ai_pred          &lt;lgl&gt; NA</span></span></code></pre></div>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>                     <span class="st">&quot;is_open_data&quot;</span>, <span class="st">&quot;is_open_code&quot;</span>, <span class="st">&quot;is_ai_pred&quot;</span>,</span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>                     <span class="st">&quot;is_open_access&quot;</span>, <span class="st">&quot;is_reporting_pred&quot;</span>)]</span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>)</span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a><span class="co">#&gt; Rows: 1</span></span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a><span class="co">#&gt; Columns: 12</span></span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a><span class="co">#&gt; $ pmid                &lt;chr&gt; &quot;32171256&quot;</span></span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a><span class="co">#&gt; $ year                &lt;int&gt; 2020</span></span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a><span class="co">#&gt; $ is_coi_pred         &lt;lgl&gt; TRUE</span></span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a><span class="co">#&gt; $ is_fund_pred        &lt;lgl&gt; FALSE</span></span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a><span class="co">#&gt; $ is_register_pred    &lt;lgl&gt; FALSE</span></span>
+<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a><span class="co">#&gt; $ is_novelty_pred     &lt;lgl&gt; FALSE</span></span>
+<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a><span class="co">#&gt; $ is_replication_pred &lt;lgl&gt; FALSE</span></span>
+<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a><span class="co">#&gt; $ is_open_data        &lt;lgl&gt; TRUE</span></span>
+<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a><span class="co">#&gt; $ is_open_code        &lt;lgl&gt; FALSE</span></span>
+<span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a><span class="co">#&gt; $ is_ai_pred          &lt;lgl&gt; NA</span></span>
+<span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a><span class="co">#&gt; $ is_open_access      &lt;lgl&gt; TRUE</span></span>
+<span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a><span class="co">#&gt; $ is_reporting_pred   &lt;lgl&gt; FALSE</span></span></code></pre></div>
 <p><code>is_ai_pred</code> is <code>NA</code> here because this example
 article predates 2023; for a 2023 or later article it would be
 <code>TRUE</code> or <code>FALSE</code>.</p>
 </div>
 <div id="individual-indicators" class="section level2">
 <h2>Individual indicators</h2>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>coi <span class="ot">&lt;-</span> <span class="fu">rt_coi_pmc</span>(xml_path, <span class="at">remove_ns =</span> <span class="cn">TRUE</span>)</span>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>coi <span class="ot">&lt;-</span> <span class="fu">rt_coi_pmc</span>(xml_path)</span>
 <span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="fu">c</span>(<span class="at">is_coi =</span> coi<span class="sc">$</span>is_coi_pred, <span class="at">text =</span> <span class="fu">substr</span>(coi<span class="sc">$</span>coi_text, <span class="dv">1</span>, <span class="dv">120</span>))</span>
 <span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a><span class="co">#&gt;                                                                                                                     is_coi </span></span>
 <span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="co">#&gt;                                                                                                                     &quot;TRUE&quot; </span></span>
 <span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a><span class="co">#&gt;                                                                                                                       text </span></span>
 <span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a><span class="co">#&gt; &quot;Competing interests In the past 36 months, J.D.W. received research support through the Collaboration for Research Integ&quot;</span></span></code></pre></div>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>fund <span class="ot">&lt;-</span> <span class="fu">rt_fund_pmc</span>(xml_path, <span class="at">remove_ns =</span> <span class="cn">TRUE</span>)</span>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>fund <span class="ot">&lt;-</span> <span class="fu">rt_fund_pmc</span>(xml_path)</span>
 <span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="fu">c</span>(<span class="at">is_fund =</span> fund<span class="sc">$</span>is_fund_pred, <span class="at">text =</span> <span class="fu">substr</span>(fund<span class="sc">$</span>fund_text, <span class="dv">1</span>, <span class="dv">120</span>))</span>
 <span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="co">#&gt; is_fund    text </span></span>
 <span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co">#&gt; &quot;FALSE&quot;      &quot;&quot;</span></span></code></pre></div>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>register <span class="ot">&lt;-</span> <span class="fu">rt_register_pmc</span>(xml_path, <span class="at">remove_ns =</span> <span class="cn">TRUE</span>)</span>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>register <span class="ot">&lt;-</span> <span class="fu">rt_register_pmc</span>(xml_path)</span>
 <span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>register<span class="sc">$</span>is_register_pred</span>
 <span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a><span class="co">#&gt; [1] FALSE</span></span></code></pre></div>
 </div>
@@ -571,7 +605,7 @@ article predates 2023; for a 2023 or later article it would be
 <code>is_open_code</code>; <code>rt_data_code_pmc</code> is the focused
 view that also returns the matched statements. Detection is native and
 needs no external packages.</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>data_code <span class="ot">&lt;-</span> <span class="fu">rt_data_code_pmc</span>(xml_path, <span class="at">remove_ns =</span> <span class="cn">TRUE</span>)</span>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>data_code <span class="ot">&lt;-</span> <span class="fu">rt_data_code_pmc</span>(xml_path)</span>
 <span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a></span>
 <span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>dplyr<span class="sc">::</span><span class="fu">glimpse</span>(</span>
 <span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>  data_code[, <span class="fu">c</span>(<span class="st">&quot;is_open_data&quot;</span>, <span class="st">&quot;open_data_statements&quot;</span>,</span>
@@ -589,7 +623,7 @@ repository and accession URLs extracted from the statements, ready to
 pass to FAIR-assessment tooling such as <a href="https://github.com/choxos/rfair"><code>rfair</code></a>. Article
 metadata (title, journal, identifiers, dates) is available separately
 via <code>rt_meta_pmc</code>.</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>meta <span class="ot">&lt;-</span> <span class="fu">rt_meta_pmc</span>(xml_path, <span class="at">remove_ns =</span> <span class="cn">TRUE</span>)</span>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>meta <span class="ot">&lt;-</span> <span class="fu">rt_meta_pmc</span>(xml_path)</span>
 <span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>dplyr<span class="sc">::</span><span class="fu">glimpse</span>(meta[, <span class="fu">c</span>(<span class="st">&quot;pmid&quot;</span>, <span class="st">&quot;doi&quot;</span>)])</span>
 <span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a><span class="co">#&gt; Rows: 1</span></span>
 <span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a><span class="co">#&gt; Columns: 2</span></span>
@@ -602,7 +636,7 @@ via <code>rt_meta_pmc</code>.</p>
 year-gated prediction <code>is_ai_pred</code> (<code>NA</code> before
 2023) and the matched text. The <code>ai-disclosure</code> vignette
 covers this indicator in depth.</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>ai <span class="ot">&lt;-</span> <span class="fu">rt_ai_pmc</span>(xml_path, <span class="at">remove_ns =</span> <span class="cn">TRUE</span>)</span>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>ai <span class="ot">&lt;-</span> <span class="fu">rt_ai_pmc</span>(xml_path)</span>
 <span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a><span class="fu">c</span>(<span class="at">year =</span> ai<span class="sc">$</span>year, <span class="at">is_ai =</span> ai<span class="sc">$</span>is_ai_pred)</span>
 <span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a><span class="co">#&gt;  year is_ai </span></span>
 <span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a><span class="co">#&gt;  2020    NA</span></span></code></pre></div>
@@ -610,22 +644,22 @@ covers this indicator in depth.</p>
 </div>
 <div id="usage-txt-files" class="section level1">
 <h1>Usage: TXT files</h1>
-<p>To analyze a PDF, first convert it to TXT with
-<code>rt_read_pdf</code> (this needs the poppler <code>pdftotext</code>
-utility installed), then run the TXT detectors. The chunks below are
-illustrative and are not executed when the vignette is built.</p>
+<p>The plain-text detectors take either a file path or the text itself,
+and return the same indicator columns as the XML detectors.
+<code>rt_all_pdf()</code> scores a PDF in one call (it needs the poppler
+<code>pdftotext</code> utility). The chunks below are illustrative and
+are not executed when the vignette is built.</p>
 <div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a>pdf_path <span class="ot">&lt;-</span> <span class="fu">system.file</span>(</span>
 <span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>  <span class="st">&quot;extdata&quot;</span>, <span class="st">&quot;PMID32171256-PMC7071725.pdf&quot;</span>, <span class="at">package =</span> <span class="st">&quot;rtransparency&quot;</span></span>
 <span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a>)</span>
-<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a>article <span class="ot">&lt;-</span> <span class="fu">rt_read_pdf</span>(pdf_path)</span>
-<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a><span class="fu">writeLines</span>(article, <span class="st">&quot;article.txt&quot;</span>)</span>
-<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a></span>
-<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a><span class="fu">rt_coi</span>(<span class="st">&quot;article.txt&quot;</span>)</span>
-<span id="cb10-8"><a href="#cb10-8" tabindex="-1"></a><span class="fu">rt_fund</span>(<span class="st">&quot;article.txt&quot;</span>)</span>
-<span id="cb10-9"><a href="#cb10-9" tabindex="-1"></a><span class="fu">rt_register</span>(<span class="st">&quot;article.txt&quot;</span>)</span>
-<span id="cb10-10"><a href="#cb10-10" tabindex="-1"></a><span class="fu">rt_data_code</span>(<span class="st">&quot;article.txt&quot;</span>)</span>
-<span id="cb10-11"><a href="#cb10-11" tabindex="-1"></a><span class="fu">rt_ai</span>(<span class="st">&quot;article.txt&quot;</span>)    <span class="co"># generative-AI-use disclosure</span></span>
-<span id="cb10-12"><a href="#cb10-12" tabindex="-1"></a><span class="fu">rt_all</span>(<span class="st">&quot;article.txt&quot;</span>)   <span class="co"># COI, funding, registration, novelty, replication</span></span></code></pre></div>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a><span class="fu">rt_all_pdf</span>(pdf_path)                 <span class="co"># all ten indicators from a PDF</span></span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a></span>
+<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a>article <span class="ot">&lt;-</span> <span class="fu">rt_read_pdf</span>(pdf_path)     <span class="co"># or extract the text once ...</span></span>
+<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a><span class="fu">rt_coi</span>(<span class="at">text =</span> article)               <span class="co"># ... and run any detector on it</span></span>
+<span id="cb10-8"><a href="#cb10-8" tabindex="-1"></a><span class="fu">rt_all</span>(<span class="at">text =</span> article)</span>
+<span id="cb10-9"><a href="#cb10-9" tabindex="-1"></a></span>
+<span id="cb10-10"><a href="#cb10-10" tabindex="-1"></a><span class="fu">rt_all</span>(<span class="st">&quot;article.txt&quot;</span>)                <span class="co"># a text file works the same way</span></span>
+<span id="cb10-11"><a href="#cb10-11" tabindex="-1"></a><span class="fu">rt_all_txt_dir</span>(<span class="st">&quot;path/to/articles&quot;</span>)   <span class="co"># a directory of TXT and PDF files</span></span></code></pre></div>
 <p><code>rt_ai</code> is the plain-text counterpart of
 <code>rt_ai_pmc</code>. A text file carries no reliable publication
 date, so <code>rt_ai</code> applies no 2023 year gate
@@ -637,18 +671,18 @@ false-positive rate on papers that use AI as a research method.</p>
 </div>
 <div id="processing-many-articles" class="section level1">
 <h1>Processing many articles</h1>
-<p><code>rt_all_pmc_dir()</code> runs all eight indicators over an
-entire directory (or a vector of file paths) in one call, designed for
+<p><code>rt_all_pmc_dir()</code> runs all ten indicators over an entire
+directory (or a vector of file paths) in one call, designed for
 corpus-scale analysis.</p>
 <div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="co"># Sequential, in memory</span></span>
-<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a>res <span class="ot">&lt;-</span> <span class="fu">rt_all_pmc_dir</span>(<span class="st">&quot;path/to/xml&quot;</span>, <span class="at">remove_ns =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a>res <span class="ot">&lt;-</span> <span class="fu">rt_all_pmc_dir</span>(<span class="st">&quot;path/to/xml&quot;</span>)</span>
 <span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a></span>
 <span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a><span class="co"># Resumable and parallel: results are written to a CSV in chunks, a re-run skips</span></span>
 <span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a><span class="co"># files already recorded, and a malformed file yields an is_success = FALSE row</span></span>
 <span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a><span class="co"># instead of aborting the run.</span></span>
 <span id="cb11-7"><a href="#cb11-7" tabindex="-1"></a>future<span class="sc">::</span><span class="fu">plan</span>(<span class="st">&quot;multisession&quot;</span>)</span>
 <span id="cb11-8"><a href="#cb11-8" tabindex="-1"></a>res <span class="ot">&lt;-</span> <span class="fu">rt_all_pmc_dir</span>(</span>
-<span id="cb11-9"><a href="#cb11-9" tabindex="-1"></a>  <span class="st">&quot;path/to/xml&quot;</span>, <span class="at">remove_ns =</span> <span class="cn">TRUE</span>, <span class="at">output =</span> <span class="st">&quot;results.csv&quot;</span>, <span class="at">parallel =</span> <span class="cn">TRUE</span></span>
+<span id="cb11-9"><a href="#cb11-9" tabindex="-1"></a>  <span class="st">&quot;path/to/xml&quot;</span>, <span class="at">output =</span> <span class="st">&quot;results.csv&quot;</span>, <span class="at">parallel =</span> <span class="cn">TRUE</span></span>
 <span id="cb11-10"><a href="#cb11-10" tabindex="-1"></a>)</span></code></pre></div>
 </div>
 <div id="summarizing-a-corpus" class="section level1">
@@ -661,38 +695,62 @@ and <code>rt_plot()</code> draws prevalence bars and yearly trends. The
 <code>transparency-summary</code> vignette covers this in depth.</p>
 <div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a><span class="fu">data</span>(rt_demo)            <span class="co"># a small simulated example shipped with the package</span></span>
 <span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a><span class="fu">rt_summary</span>(rt_demo)[, <span class="fu">c</span>(<span class="st">&quot;indicator&quot;</span>, <span class="st">&quot;percent&quot;</span>, <span class="st">&quot;adj_percent&quot;</span>)]</span>
-<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a><span class="co">#&gt; # A tibble: 8 × 3</span></span>
-<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a><span class="co">#&gt;   indicator           percent adj_percent</span></span>
-<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                 &lt;dbl&gt;       &lt;dbl&gt;</span></span>
-<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a><span class="co">#&gt; 1 is_coi_pred           70.4        70.8 </span></span>
-<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a><span class="co">#&gt; 2 is_fund_pred          79.6        79.4 </span></span>
-<span id="cb12-8"><a href="#cb12-8" tabindex="-1"></a><span class="co">#&gt; 3 is_register_pred      29.7        30.8 </span></span>
-<span id="cb12-9"><a href="#cb12-9" tabindex="-1"></a><span class="co">#&gt; 4 is_open_data          20.4        25.7 </span></span>
-<span id="cb12-10"><a href="#cb12-10" tabindex="-1"></a><span class="co">#&gt; 5 is_open_code           8.5         9.13</span></span>
-<span id="cb12-11"><a href="#cb12-11" tabindex="-1"></a><span class="co">#&gt; 6 is_novelty_pred       54.4        62.8 </span></span>
-<span id="cb12-12"><a href="#cb12-12" tabindex="-1"></a><span class="co">#&gt; 7 is_replication_pred    9.42        8.67</span></span>
-<span id="cb12-13"><a href="#cb12-13" tabindex="-1"></a><span class="co">#&gt; 8 is_ai_pred            25.2        NA</span></span></code></pre></div>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a><span class="co">#&gt; # A tibble: 10 × 3</span></span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a><span class="co">#&gt;    indicator           percent adj_percent</span></span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a><span class="co">#&gt;    &lt;chr&gt;                 &lt;dbl&gt;       &lt;dbl&gt;</span></span>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a><span class="co">#&gt;  1 is_coi_pred           70.4        74.9 </span></span>
+<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a><span class="co">#&gt;  2 is_fund_pred          79.6        86.1 </span></span>
+<span id="cb12-8"><a href="#cb12-8" tabindex="-1"></a><span class="co">#&gt;  3 is_register_pred      29.7        24.6 </span></span>
+<span id="cb12-9"><a href="#cb12-9" tabindex="-1"></a><span class="co">#&gt;  4 is_open_data          20.4        25.7 </span></span>
+<span id="cb12-10"><a href="#cb12-10" tabindex="-1"></a><span class="co">#&gt;  5 is_open_code           8.5         9.13</span></span>
+<span id="cb12-11"><a href="#cb12-11" tabindex="-1"></a><span class="co">#&gt;  6 is_novelty_pred       54.4        62.8 </span></span>
+<span id="cb12-12"><a href="#cb12-12" tabindex="-1"></a><span class="co">#&gt;  7 is_replication_pred    9.42        8.25</span></span>
+<span id="cb12-13"><a href="#cb12-13" tabindex="-1"></a><span class="co">#&gt;  8 is_ai_pred            25.2        NA   </span></span>
+<span id="cb12-14"><a href="#cb12-14" tabindex="-1"></a><span class="co">#&gt;  9 is_open_access        82.2        NA   </span></span>
+<span id="cb12-15"><a href="#cb12-15" tabindex="-1"></a><span class="co">#&gt; 10 is_reporting_pred     13.9        13.7</span></span></code></pre></div>
 </div>
 <div id="downloading-pmc-xml" class="section level1">
 <h1>Downloading PMC XML</h1>
-<p>PMC full-text XML can be downloaded by PMCID. The package exposes
-nothing for this, but the <code>europepmc</code> (CRAN) or
-<code>metareadr</code> packages work well; the following is
-illustrative.</p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="co"># europepmc::epmc_ftxt(&quot;PMC7071725&quot;)            # returns the XML document</span></span>
-<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a><span class="co"># metareadr::mt_read_pmcoa(&quot;7071725&quot;, &quot;article.xml&quot;)</span></span></code></pre></div>
+<p><code>rt_fetch_pmc()</code> downloads full-text XML for PMCIDs,
+PubMed IDs or DOIs from NCBI (or Europe PMC with
+<code>source = &quot;europepmc&quot;</code>), reusing files already downloaded and
+reporting which articles have a full-text body.
+<code>rt_convert_ids()</code> maps between the identifier types.</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a>got <span class="ot">&lt;-</span> <span class="fu">rt_fetch_pmc</span>(<span class="fu">c</span>(<span class="st">&quot;PMC7071725&quot;</span>, <span class="st">&quot;32171256&quot;</span>), <span class="at">dir =</span> <span class="st">&quot;xml&quot;</span>)</span>
+<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a>res <span class="ot">&lt;-</span> <span class="fu">rt_all_pmc_dir</span>(<span class="st">&quot;xml&quot;</span>)</span></code></pre></div>
+</div>
+<div id="beyond-presence-of-a-statement" class="section level1">
+<h1>Beyond presence of a statement</h1>
+<p>A few functions go further than detecting whether a statement
+exists:</p>
+<ul>
+<li><code>rt_authors_pmc()</code> and <code>rt_funders_pmc()</code> read
+tagged JATS metadata: ORCID coverage and CRediT contribution roles, and
+funders with their Crossref Funder Registry and ROR identifiers and
+award numbers.</li>
+<li><code>rt_trial_ids()</code> extracts registry identifiers from the
+registration text, and <code>rt_registration_timing()</code> asks
+ClinicalTrials.gov whether each trial was registered before it
+started.</li>
+<li><code>rt_fill_coi_pubmed()</code> recovers conflict-of-interest
+statements that PubMed records but the full-text XML lacks.</li>
+<li><code>rt_check_links()</code> checks whether the data and code links
+a statement gives actually resolve.</li>
+<li><code>rt_ethics_pmc()</code> and <code>rt_ethics()</code> detect
+ethics approval and informed consent statements. They are experimental:
+not yet validated against hand labels, so they are kept out of
+<code>rt_all_pmc()</code>.</li>
+</ul>
 </div>
 <div id="validation" class="section level1">
 <h1>Validation</h1>
-<p>The detectors were benchmarked against the human-labeled XML
-benchmark of Serghiou et al. (2021). The current package reaches
-roughly: COI 97% accuracy, funding 97%, protocol registration 98%. The
-native data/code detector reaches code 88% sensitivity / 99% specificity
-and data 77% sensitivity / 99% specificity (see
-<code>inst/benchmark/</code> and <code>data-raw/benchmark/</code> in the
-source repository for the reproducible benchmark). The native data/code
-values are reproducible benchmark and regression estimates, not
-untouched external-validation estimates.</p>
+<p>Every indicator is benchmarked against hand labels; the current
+numbers, their provenance and the scripts that reproduce them are in
+<code>inst/benchmark/</code> and <code>data-raw/benchmark/</code> of the
+source repository, and the README summarizes them. The accuracy table
+<code>rt_accuracy</code> used by <code>rt_summary()</code> records each
+estimate with its validation counts, so the corrected prevalence carries
+the uncertainty of the validation.</p>
 </div>
 <div id="naming-convention-and-dependencies" class="section level1">
 <h1>Naming convention and dependencies</h1>

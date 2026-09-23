@@ -14,11 +14,17 @@ library(rtransparency)
 xml_path <- system.file(
   "extdata", "PMID32171256-PMC7071725.xml", package = "rtransparency"
 )
-ai <- rt_ai_pmc(xml_path, remove_ns = TRUE)
+ai <- rt_ai_pmc(xml_path)
 c(year = ai$year, is_ai_pred = ai$is_ai_pred)
 
 ## -----------------------------------------------------------------------------
-all_indicators <- rt_all_pmc(xml_path, remove_ns = TRUE)
+rt_ai(text = paste(
+  "During the preparation of this work the authors used Claude 3.5 Sonnet",
+  "and DeepL to translate and edit the text."
+))[, c("is_ai_pred", "ai_used", "ai_tools", "ai_purpose")]
+
+## -----------------------------------------------------------------------------
+all_indicators <- rt_all_pmc(xml_path)
 all_indicators[, c("pmid", "year", "is_ai_pred")]
 
 ## -----------------------------------------------------------------------------

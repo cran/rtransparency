@@ -409,6 +409,20 @@ first</td>
 manuscript preparation (including “no AI was used”)</td>
 <td>Use of AI as a research method</td>
 </tr>
+<tr class="odd">
+<td>Open-access license</td>
+<td>The article is <strong>openly licensed</strong> (Creative Commons /
+CC0), and which license</td>
+<td>That every reader has full reuse rights (NC / ND licenses restrict
+reuse)</td>
+</tr>
+<tr class="even">
+<td>Reporting guideline</td>
+<td>The authors <strong>state they followed</strong> a reporting
+guideline, and which one</td>
+<td>That the study fully complied, or that a
+cited/animal-welfare/clinical guideline counts</td>
+</tr>
 </tbody>
 </table>
 <p>Conflicts of interest and AI disclosure are
@@ -444,6 +458,17 @@ publication date and no section structure available, it applies
 and scans the whole document, so the caller must restrict it to
 2023-or-later articles and tolerate a higher false-positive rate on
 AI-method papers than <code>rt_ai_pmc()</code>.</li>
+<li><strong>Reporting guideline is claim detection.</strong> It
+identifies a stated adherence to a reporting guideline, not whether the
+study fully complied. It is tuned for precision (validated on a
+hand-labeled 1000-article sample; see <code>rt_accuracy</code> for the
+current sensitivity and specificity); the residual misses are mostly
+non-English statements, and residual false positives are guidelines
+named but not actually followed by the article.</li>
+<li><strong>Open-access licensing is XML-structural.</strong> It reads
+the JATS <code>&lt;license&gt;</code> element, so it is
+near-deterministic for PMC XML but, in plain text, depends on a license
+statement being present in the extracted text.</li>
 <li><strong>Accuracy correction.</strong> <code>rt_summary()</code> can
 correct apparent prevalence using bundled sensitivity/specificity
 estimates (<code>rt_accuracy</code>). These derive from the validation
@@ -459,13 +484,34 @@ stable estimate).</li>
 <code>is_coi_pred</code>, <code>is_fund_pred</code>,
 <code>is_register_pred</code>, <code>is_novelty_pred</code>,
 <code>is_replication_pred</code>, <code>is_open_data</code>,
-<code>is_open_code</code>, and the year-gated <code>is_ai_pred</code>
-(<code>NA</code> before 2023), each paired with the extracted text.
-<code>rt_all_pmc()</code> returns all eight for one file;
-<code>rt_all_pmc_dir()</code> runs a whole directory.</p>
+<code>is_open_code</code>, the year-gated <code>is_ai_pred</code>
+(<code>NA</code> before 2023), <code>is_open_access</code> (with
+<code>oa_license</code>) and <code>is_reporting_pred</code> (with
+<code>reporting_guideline</code>), each paired with the extracted text
+or value. <code>rt_all_pmc()</code> returns all ten for one file;
+<code>rt_all_pmc_dir()</code> runs a whole directory. The plain-text
+functions (<code>rt_all()</code> and the single-indicator ones) return
+the same indicator column names, so plain-text and XML results can be
+stacked and summarized together.</p>
+<p>A few columns describe a statement rather than detect one:
+<code>ai_used</code>, <code>ai_tools</code> and <code>ai_purpose</code>
+read an AI-use disclosure (whether it reports use, of which tools, for
+what), and <code>has_das</code> / <code>das_text</code> record whether
+the article has a data-availability section at all, which is not the
+same as sharing data (a statement can say the data are available only on
+request). A failed file has <code>is_success = FALSE</code> and the
+reason in <code>error</code>.</p>
+<p>Two limitations are worth stating plainly. Presence of a statement is
+not its quality: a registration can be retrospective
+(<code>rt_registration_timing()</code> checks this for
+ClinicalTrials.gov) and a data link can be dead
+(<code>rt_check_links()</code>). And the XML detector cannot see a
+statement that is printed only in the PDF:
+<code>rt_fill_coi_pubmed()</code> recovers conflict-of-interest
+statements PubMed records for such articles.</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(rtransparency)</span>
 <span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a></span>
-<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>res <span class="ot">&lt;-</span> <span class="fu">rt_all_pmc</span>(<span class="st">&quot;article.xml&quot;</span>, <span class="at">remove_ns =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>res <span class="ot">&lt;-</span> <span class="fu">rt_all_pmc</span>(<span class="st">&quot;article.xml&quot;</span>)</span>
 <span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a>res[, <span class="fu">c</span>(<span class="st">&quot;is_coi_pred&quot;</span>, <span class="st">&quot;is_fund_pred&quot;</span>, <span class="st">&quot;is_open_data&quot;</span>, <span class="st">&quot;is_open_code&quot;</span>)]</span></code></pre></div>
 </div>
 <div id="linking-to-fair-assessment" class="section level2">
@@ -475,7 +521,7 @@ stable estimate).</li>
 passed to FAIR-assessment tooling such as <a href="https://github.com/choxos/rfair"><code>rfair</code></a>, a native
 R implementation of FAIR data and software assessment, to score the
 findability and accessibility of the shared resources.</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>res <span class="ot">&lt;-</span> <span class="fu">rt_all_pmc</span>(<span class="st">&quot;article.xml&quot;</span>, <span class="at">remove_ns =</span> <span class="cn">TRUE</span>)</span>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>res <span class="ot">&lt;-</span> <span class="fu">rt_all_pmc</span>(<span class="st">&quot;article.xml&quot;</span>)</span>
 <span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>links <span class="ot">&lt;-</span> <span class="fu">strsplit</span>(res<span class="sc">$</span>open_data_links, <span class="st">&quot; ; &quot;</span>)[[<span class="dv">1</span>]]</span>
 <span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a><span class="co"># rfair::assess_fair(links)</span></span></code></pre></div>
 </div>

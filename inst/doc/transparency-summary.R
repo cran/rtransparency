@@ -8,7 +8,7 @@ library(rtransparency)
 xml <- system.file(
   "extdata", "PMID32171256-PMC7071725.xml", package = "rtransparency"
 )
-one <- rt_all_pmc(xml, remove_ns = TRUE)
+one <- rt_all_pmc(xml)
 one[, c("pmid", "is_coi_pred", "is_fund_pred", "is_register_pred")]
 
 ## -----------------------------------------------------------------------------
@@ -34,7 +34,9 @@ knitr::kable(
 rt_accuracy
 
 ## -----------------------------------------------------------------------------
-my_acc <- rt_accuracy
+# Keep only the point estimates: the bundled validation counts would no longer
+# match an edited sensitivity (rt_summary() warns when they disagree).
+my_acc <- rt_accuracy[, c("variable", "sensitivity", "specificity")]
 my_acc$sensitivity[my_acc$variable == "is_open_data"] <- 0.758
 rt_summary(rt_demo, indicators = "is_open_data", accuracy = my_acc)[,
   c("label", "percent", "adj_percent")]
